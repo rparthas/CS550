@@ -3,9 +3,16 @@ package edu.iit.cs550.util;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.Inet4Address;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.net.InetAddress;
+import java.net.NetworkInterface;
+import java.net.Socket;
+import java.util.Enumeration;
 import java.util.Properties;
+import java.util.regex.Pattern;
 
+import edu.iit.cs550.core.DataObject;
 import edu.iit.cs550.core.PeerObject;
 
 public class UtilityClass {
@@ -19,8 +26,8 @@ public class UtilityClass {
 	private static void loadProperties() {
 		InputStream input = null;
 		try {
-			input = new FileInputStream("E:\\Workspace\\DHT\\src\\config.properties");
-			//input = new FileInputStream("config.properties");
+			input = new FileInputStream("/home/ram/workpad/git/CS550/DHT/src/config.properties");
+			// input = new FileInputStream("config.properties");
 			prop.load(input);
 		} catch (Exception ex) {
 			ex.printStackTrace();
@@ -39,15 +46,38 @@ public class UtilityClass {
 		return prop.getProperty(key);
 	}
 
-	public static String getMyIP()  {
-		try{
-			String ip = Inet4Address.getLocalHost().getHostAddress().toString();
-			return ip;
-		}catch(Exception e){
+	public static int getIntValue(String key) {
+		return Integer.parseInt(prop.getProperty(key));
+	}
+
+	public static String getMyIP() {
+		String myIp = getMyIPAddress().getCanonicalHostName();
+		return myIp;
+	}
+
+	public static InetAddress getMyIPAddress() {
+		InetAddress myip = null;
+		String regex = "^([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\." + "([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\."
+				+ "([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\." + "([01]?\\d\\d?|2[0-4]\\d|25[0-5])$";
+		try {
+			Enumeration<NetworkInterface> ifaces = NetworkInterface.getNetworkInterfaces();
+			loop: while (ifaces.hasMoreElements()) {
+				NetworkInterface iface = ifaces.nextElement();
+				if (Pattern.matches("wlan[0-9]", iface.getDisplayName())) {
+					InetAddress ia = null;
+					for (Enumeration<InetAddress> ips = iface.getInetAddresses(); ips.hasMoreElements();) {
+						ia = (InetAddress) ips.nextElement();
+						if (Pattern.matches(regex, ia.getCanonicalHostName())) {
+							myip = ia;
+							break loop;
+						}
+					}
+				}
+			}
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		return null;
-		
+		return myip;
 	}
 
 	public static PeerObject getPeer(String peerId) {
@@ -59,6 +89,20 @@ public class UtilityClass {
 
 	public static int getNoOfPeers() {
 		return Integer.parseInt(getValue("peers"));
+	}
+	
+	public static DataObject connectToDHTPeer(DataObject object,PeerObject peerObject) {
+		try (Socket clientSocket = new Socket(InetAddress.getByName(peerObject.getIpAddress()), peerObject.getPort());
+				ObjectOutputStream oos = new ObjectOutputStream(clientSocket.getOutputStream());
+				ObjectInputStream ois = new ObjectInputStream(clientSocket.getInputStream());) {
+			oos.writeObject(object);
+			oos.flush();
+			object = (DataObject) ois.readObject();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		return object;
 	}
 
 }

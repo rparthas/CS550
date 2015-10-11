@@ -104,7 +104,7 @@ public class Peer implements Runnable {
 	 * @param key
 	 * @return
 	 */
-	public boolean remove(Object key) {
+	public Object remove(Object key) {
 		Object value = null;
 		int peerNo = computeHash(key);
 		String peer = "peer" + peerNo;
@@ -123,18 +123,15 @@ public class Peer implements Runnable {
 			e.printStackTrace();
 		}
 
-		return value != null;
+		return value;
 
 	}
 
 	public DataObject connectToPeer(PeerObject peerObject, DataObject object) {
 		DataObject result = null;
-		try (Socket clientSocket = new Socket(InetAddress.getByName(peerObject
-				.getIpAddress()), peerObject.getPort());
-				ObjectOutputStream oos = new ObjectOutputStream(
-						clientSocket.getOutputStream());
-				ObjectInputStream ois = new ObjectInputStream(
-						clientSocket.getInputStream());) {
+		try (Socket clientSocket = new Socket(InetAddress.getByName(peerObject.getIpAddress()), peerObject.getPort());
+				ObjectOutputStream oos = new ObjectOutputStream(clientSocket.getOutputStream());
+				ObjectInputStream ois = new ObjectInputStream(clientSocket.getInputStream());) {
 			oos.writeObject(object);
 			oos.flush();
 			result = (DataObject) ois.readObject();
@@ -147,14 +144,13 @@ public class Peer implements Runnable {
 
 	@Override
 	public void run() {
-		try (ServerSocket socket = new ServerSocket(peerObect.getPort());) {
+		try (ServerSocket socket = new ServerSocket(peerObect.getPort(), 50, UtilityClass.getMyIPAddress());) {
 			int threads = Integer.parseInt(UtilityClass.getValue("THREADS"));
-			ExecutorService executorService = Executors
-					.newFixedThreadPool(threads);
+			ExecutorService executorService = Executors.newFixedThreadPool(threads);
 			while (true) {
 				Socket peerSocket = socket.accept();
 				PeerThread pThread = new PeerThread();
-				pThread.setInternalMap(internalMap);
+				pThread.setPeer(this);
 				pThread.setPeerSocket(peerSocket);
 				executorService.submit(pThread);
 			}
@@ -164,6 +160,7 @@ public class Peer implements Runnable {
 	}
 
 	public void execute() {
+		System.out.println("Peer Running");
 		new Thread(this).start();
 	}
 
@@ -173,7 +170,7 @@ class PeerThread implements Runnable {
 
 	public Socket peerSocket;
 
-	Map<Object, Object> internalMap = new LinkedHashMap<Object, Object>();
+	Peer peer = null;
 
 	public Socket getPeerSocket() {
 		return peerSocket;
@@ -183,38 +180,36 @@ class PeerThread implements Runnable {
 		this.peerSocket = peerSocket;
 	}
 
-	public Map<Object, Object> getInternalMap() {
-		return internalMap;
+	public Peer getPeer() {
+		return peer;
 	}
 
-	public void setInternalMap(Map<Object, Object> internalMap) {
-		this.internalMap = internalMap;
+	public void setPeer(Peer peer) {
+		this.peer = peer;
 	}
 
 	@Override
 	public void run() {
-		try (ObjectInputStream ois = new ObjectInputStream(
-				peerSocket.getInputStream());
-				ObjectOutputStream oos = new ObjectOutputStream(
-						peerSocket.getOutputStream());) {
+		try (ObjectInputStream ois = new ObjectInputStream(peerSocket.getInputStream());
+				ObjectOutputStream oos = new ObjectOutputStream(peerSocket.getOutputStream());) {
 			DataObject input = (DataObject) ois.readObject();
 			switch (input.getOperation()) {
 			case "GET":
-				input.setValue(internalMap.get(input.getKey()));
+				input.setValue(peer.get(input.getKey()));
 				input.setSuccess("Y");
 				break;
 			case "PUT":
-				internalMap.put(input.getKey(), input.getValue());
+				peer.put(input.getKey(), input.getValue());
 				input.setSuccess("Y");
 				break;
 			case "REM":
-				input.setValue(internalMap.remove(input.getKey()));
+				input.setValue(peer.remove(input.getKey()));
 				input.setSuccess("Y");
 				break;
 			}
 			oos.writeObject(input);
 			oos.flush();
-			System.out.println(input);
+			//System.out.println(input);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
