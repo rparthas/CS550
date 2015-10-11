@@ -90,8 +90,8 @@ public class UtilityClass {
 	public static int getNoOfPeers() {
 		return Integer.parseInt(getValue("peers"));
 	}
-	
-	public static DataObject connectToDHTPeer(DataObject object,PeerObject peerObject) {
+
+	public static DataObject connectToDHTPeer(DataObject object, PeerObject peerObject) {
 		try (Socket clientSocket = new Socket(InetAddress.getByName(peerObject.getIpAddress()), peerObject.getPort());
 				ObjectOutputStream oos = new ObjectOutputStream(clientSocket.getOutputStream());
 				ObjectInputStream ois = new ObjectInputStream(clientSocket.getInputStream());) {
