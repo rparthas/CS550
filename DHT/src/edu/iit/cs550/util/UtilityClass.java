@@ -15,19 +15,25 @@ import java.util.regex.Pattern;
 import edu.iit.cs550.core.DataObject;
 import edu.iit.cs550.core.PeerObject;
 
+/**
+ * Class for Utility Operations
+ * 
+ * @author Raja
+ *
+ */
 public class UtilityClass {
 
 	public static Properties prop = new Properties();
 
-	static {
-		loadProperties();
-	}
+	public static SocketPool socketPool = new SocketPool();
 
-	private static void loadProperties() {
+	/**
+	 * loads the property file
+	 */
+	static {
 		InputStream input = null;
 		try {
-			input = new FileInputStream("/home/ram/workpad/git/CS550/DHT/src/config.properties");
-			// input = new FileInputStream("config.properties");
+			input = new FileInputStream("config.properties");
 			prop.load(input);
 		} catch (Exception ex) {
 			ex.printStackTrace();
@@ -42,19 +48,38 @@ public class UtilityClass {
 		}
 	}
 
+	/**
+	 * Returns the value for property from property file
+	 * 
+	 * @param key
+	 * @return
+	 */
 	public static String getValue(String key) {
 		return prop.getProperty(key);
 	}
 
+	/**
+	 * Returns the value converted to integer
+	 * 
+	 * @param key
+	 * @return
+	 */
 	public static int getIntValue(String key) {
-		return Integer.parseInt(prop.getProperty(key));
+		return Integer.parseInt(getValue(key));
 	}
 
+	/**
+	 * Gets the IPAddress as String
+	 * @return
+	 */
 	public static String getMyIP() {
 		String myIp = getMyIPAddress().getCanonicalHostName();
 		return myIp;
 	}
-
+	/**
+	 * Gets the IP Address using the wlan interface to identify public address
+	 * @return
+	 */
 	public static InetAddress getMyIPAddress() {
 		InetAddress myip = null;
 		String regex = "^([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\." + "([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\."
@@ -80,20 +105,54 @@ public class UtilityClass {
 		return myip;
 	}
 
+	/**
+	 * Forms a peer given the peer id. Lookup of property file
+	 * @param peerId
+	 * @return
+	 */
 	public static PeerObject getPeer(String peerId) {
 		String address = UtilityClass.getValue(peerId);
 		String ip = address.split(":")[0];
 		int port = Integer.parseInt(address.split(":")[1]);
-		return new PeerObject(ip, port);
+		return new PeerObject(ip, port, peerId);
 	}
 
+	/**
+	 * Convenience method to get total number of peers in system
+	 * @return
+	 */
 	public static int getNoOfPeers() {
-		return Integer.parseInt(getValue("peers"));
+		return getIntValue("peers");
 	}
 
+	/**
+	 * Connects to specified peer in DHT and sends the message to the peer
+	 * @param object
+	 * @param peerObject
+	 * @return
+	 */
 	public static DataObject connectToDHTPeer(DataObject object, PeerObject peerObject) {
-		try (Socket clientSocket = new Socket(InetAddress.getByName(peerObject.getIpAddress()), peerObject.getPort());
+		try (Socket clientSocket = socketPool.getSocket(peerObject.getPeerId());
 				ObjectOutputStream oos = new ObjectOutputStream(clientSocket.getOutputStream());
+				ObjectInputStream ois = new ObjectInputStream(clientSocket.getInputStream());) {
+			oos.writeObject(object);
+			oos.flush();
+			object = (DataObject) ois.readObject();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		return object;
+	}
+
+	/**
+	 * Overloaded version of connecting to peer and writing the result. Used by Client
+	 * @param object
+	 * @param clientSocket
+	 * @return
+	 */
+	public static DataObject connectToDHTPeer(DataObject object, Socket clientSocket) {
+		try (ObjectOutputStream oos = new ObjectOutputStream(clientSocket.getOutputStream());
 				ObjectInputStream ois = new ObjectInputStream(clientSocket.getInputStream());) {
 			oos.writeObject(object);
 			oos.flush();

@@ -1,7 +1,7 @@
 package edu.iit.cs550;
 
-import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
@@ -12,6 +12,12 @@ import edu.iit.cs550.core.Peer;
 import edu.iit.cs550.core.PeerObject;
 import edu.iit.cs550.util.UtilityClass;
 
+/**
+ * Test class for evaluating the system
+ * 
+ * @author Raja
+ *
+ */
 public class Evaluator implements Callable<Evaluator> {
 
 	PeerObject peerObject = null;
@@ -21,14 +27,14 @@ public class Evaluator implements Callable<Evaluator> {
 
 	public static void main(String args[]) throws Exception {
 		int start = 2343;
-		int peerCount = Integer.parseInt(args[0]);
+		int peerCount = UtilityClass.getNoOfPeers();
 
 		for (int i = start; i <= start + peerCount - 1; i++) {
 			Peer peer = new Peer(i);
 			peer.execute();
 		}
-
-		int[] opnCount = { 10, 100, 200, 500, 1000 };
+		Thread.sleep(5000);
+		int[] opnCount = { 10 ^ 3, 10 ^ 4, 10 ^ 5 };
 		for (int ops : opnCount) {
 			performOperation(peerCount, ops, "PUT");
 			performOperation(peerCount, ops, "GET");
@@ -41,13 +47,12 @@ public class Evaluator implements Callable<Evaluator> {
 
 	private static void performOperation(int peerCount, int ops, String operation) throws InterruptedException {
 
-		List<Callable<Evaluator>> tasks = new ArrayList<>();
-		ExecutorService es = Executors.newFixedThreadPool(20);
+		List<Callable<Evaluator>> tasks = new LinkedList<>();
+		ExecutorService es = Executors.newFixedThreadPool(200);
 		long time = Calendar.getInstance().getTimeInMillis();
 		int opnsCount = 0;
-
-		for (int j = 1; j <= ops / peerCount; j++) {
-			for (int i = 1; i <= peerCount; i++) {
+		for (int i = 1; i <= peerCount; i++) {
+			for (int j = 1; j <= ops; j++) {
 				opnsCount++;
 				Evaluator evaluator = new Evaluator();
 				evaluator.peerObject = UtilityClass.getPeer("peer" + i);
@@ -57,15 +62,6 @@ public class Evaluator implements Callable<Evaluator> {
 				tasks.add(evaluator);
 			}
 
-		}
-		while (opnsCount <= ops) {
-			opnsCount++;
-			Evaluator evaluator = new Evaluator();
-			evaluator.peerObject = UtilityClass.getPeer("peer" + peerCount);
-			evaluator.operation = operation;
-			evaluator.key = opnsCount;
-			evaluator.value = opnsCount;
-			tasks.add(evaluator);
 		}
 		es.invokeAll(tasks);
 		tasks.clear();
@@ -78,7 +74,6 @@ public class Evaluator implements Callable<Evaluator> {
 
 		DataObject doj = new DataObject(key, value, operation);
 		UtilityClass.connectToDHTPeer(doj, peerObject);
-
 		return this;
 	}
 

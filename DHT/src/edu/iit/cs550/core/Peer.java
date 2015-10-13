@@ -2,7 +2,6 @@ package edu.iit.cs550.core;
 
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.LinkedHashMap;
@@ -15,13 +14,13 @@ import edu.iit.cs550.util.UtilityClass;
 /**
  * Main Class for the Peer
  * 
- * @author Raj
+ * @author Raja
  *
  */
 public class Peer implements Runnable {
 
 	public Peer(int port) {
-		this.peerObect = new PeerObject(UtilityClass.getMyIP(), port);
+		this.peerObect = new PeerObject(UtilityClass.getMyIP(), port, null);
 	}
 
 	PeerObject peerObect = null;
@@ -127,21 +126,20 @@ public class Peer implements Runnable {
 
 	}
 
+	/**
+	 * Connects to peer and obtains result for the operation
+	 * @param peerObject
+	 * @param object
+	 * @return
+	 */
 	public DataObject connectToPeer(PeerObject peerObject, DataObject object) {
-		DataObject result = null;
-		try (Socket clientSocket = new Socket(InetAddress.getByName(peerObject.getIpAddress()), peerObject.getPort());
-				ObjectOutputStream oos = new ObjectOutputStream(clientSocket.getOutputStream());
-				ObjectInputStream ois = new ObjectInputStream(clientSocket.getInputStream());) {
-			oos.writeObject(object);
-			oos.flush();
-			result = (DataObject) ois.readObject();
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-
+		DataObject result = UtilityClass.connectToDHTPeer(object, peerObject);
 		return result;
-	}
 
+	}
+	/**
+	 * Method to start the server and wait for result
+	 */
 	@Override
 	public void run() {
 		try (ServerSocket socket = new ServerSocket(peerObect.getPort(), 50, UtilityClass.getMyIPAddress());) {
@@ -159,13 +157,20 @@ public class Peer implements Runnable {
 		}
 	}
 
+	/**
+	 * Kicks off server Thread
+	 */
 	public void execute() {
 		System.out.println("Peer Running");
 		new Thread(this).start();
 	}
 
 }
-
+/**
+ * Class to Handle Multithreaded server implementation
+ * @author ram
+ *
+ */
 class PeerThread implements Runnable {
 
 	public Socket peerSocket;
@@ -188,10 +193,14 @@ class PeerThread implements Runnable {
 		this.peer = peer;
 	}
 
+	/**
+	 * Main method to handle the incoming requests and perform the requested operation
+	 */
 	@Override
 	public void run() {
-		try (ObjectInputStream ois = new ObjectInputStream(peerSocket.getInputStream());
-				ObjectOutputStream oos = new ObjectOutputStream(peerSocket.getOutputStream());) {
+		try {
+			ObjectInputStream ois = new ObjectInputStream(peerSocket.getInputStream());
+			ObjectOutputStream oos = new ObjectOutputStream(peerSocket.getOutputStream());
 			DataObject input = (DataObject) ois.readObject();
 			switch (input.getOperation()) {
 			case "GET":
@@ -209,7 +218,6 @@ class PeerThread implements Runnable {
 			}
 			oos.writeObject(input);
 			oos.flush();
-			//System.out.println(input);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

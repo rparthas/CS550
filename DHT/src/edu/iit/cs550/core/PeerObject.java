@@ -1,6 +1,22 @@
 package edu.iit.cs550.core;
 
+/**
+ * Data transfer object holding information about the peer
+ * 
+ * @author Raja
+ *
+ */
 public class PeerObject {
+
+	private String peerId;
+
+	public String getPeerId() {
+		return peerId;
+	}
+
+	public void setPeerId(String peerId) {
+		this.peerId = peerId;
+	}
 
 	private String ipAddress;
 
@@ -22,9 +38,10 @@ public class PeerObject {
 
 	private int port = 0;
 
-	public PeerObject(String ipAddress, int port) {
+	public PeerObject(String ipAddress, int port, String id) {
 		this.ipAddress = ipAddress;
 		this.port = port;
+		this.peerId = id;
 	}
 
 	public PeerObject() {
@@ -35,8 +52,7 @@ public class PeerObject {
 	public boolean equals(Object object) {
 		if (object instanceof PeerObject) {
 			PeerObject obj = (PeerObject) object;
-			if (obj != null && obj.ipAddress != null
-					&& obj.ipAddress.equals(ipAddress) && obj.port == port) {
+			if (obj != null && obj.ipAddress != null && obj.ipAddress.equals(ipAddress) && obj.port == port) {
 				return true;
 			}
 		}
