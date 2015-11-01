@@ -4,12 +4,16 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import edu.iit.cs550.common.Constants;
+import edu.iit.cs550.common.FileServerObject;
+import edu.iit.cs550.common.TransferObject;
 import edu.iit.cs550.common.UtilityClass;
 
 /**
@@ -29,7 +33,7 @@ public class Peer implements Runnable {
 
 	SocketPool socketPool = null;
 
-	Map<Object, Object> internalMap = new LinkedHashMap<Object, Object>();
+	Map<String, List<FileServerObject>> registry = new LinkedHashMap<String, List<FileServerObject>>();
 
 	/**
 	 * Computes the distributed hash function for the key
@@ -47,36 +51,59 @@ public class Peer implements Runnable {
 	 * 
 	 * @param input
 	 */
-	public void performOperation(DataObject input) {
-		int peerNo = computeHash(input.getKey());
+	public void performOperation(TransferObject to) {
+		String hash = to.getIpAddress() + ":" + to.getPort();
+		int peerNo = computeHash(hash);
 		String peer = Constants.PEER + peerNo;
-		Object value = null;
 		try {
 			PeerObject obj = UtilityClass.getPeer(peer);
 			if (peerObject.equals(obj)) {
-				switch (input.getOperation()) {
-				case "GET":
-					value = internalMap.get(input.getKey());
-					input.setValue(value);
-					input.setSuccess("Y");
-					break;
-				case "PUT":
-					internalMap.put(input.getKey(), input.getValue());
-					input.setSuccess("Y");
-					break;
-				case "REM":
-					value = internalMap.remove(input.getKey());
-					input.setValue(value);
-					input.setSuccess("Y");
-					break;
+				if (to.isRequestFile()) {
+					List<FileServerObject> peers = lookUpFile(to.getRequestFileName());
+					to.setPeers(peers);
+				} else {
+					saveToRegistry(to);
 				}
 			} else {
-				connectToPeer(input, obj);
+				connectToPeer(to, obj);
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 
+	}
+
+	/**
+	 * This method saves the object to registry
+	 */
+	private void saveToRegistry(TransferObject to) {
+		if (to.getFiles() != null) {
+			for (String file : to.getFiles()) {
+				List<FileServerObject> peers = new ArrayList<FileServerObject>();
+				if (registry.containsKey(file)) {
+					peers = registry.get(file);
+				}
+				FileServerObject fileServerObject = new FileServerObject();
+				fileServerObject.setDirectory(to.getDirectory());
+				fileServerObject.setIpAddress(to.getIpAddress());
+				fileServerObject.setPort(to.getPort());
+				peers.add(fileServerObject);
+				registry.put(file, peers);
+			}
+		}
+	}
+
+	/**
+	 * This method returns the Peer list for the files
+	 * 
+	 * @param fileName
+	 */
+	private List<FileServerObject> lookUpFile(String fileName) {
+		List<FileServerObject> peers = new ArrayList<FileServerObject>();
+		if (registry.containsKey(fileName)) {
+			peers = registry.get(fileName);
+		}
+		return peers;
 	}
 
 	/**
@@ -115,13 +142,12 @@ public class Peer implements Runnable {
 	 * @param peerObject
 	 * @return
 	 */
-	private DataObject connectToPeer(DataObject object, PeerObject peerObject) {
+	private TransferObject connectToPeer(TransferObject object, PeerObject peerObject) {
 		try (Socket clientSocket = socketPool.getSocket(peerObject.getPeerId());) {
 			UtilityClass.connectToPeer(object, clientSocket);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-
 		return object;
 	}
 
@@ -164,7 +190,7 @@ class PeerThread implements Runnable {
 		try {
 			ObjectInputStream ois = new ObjectInputStream(peerSocket.getInputStream());
 			ObjectOutputStream oos = new ObjectOutputStream(peerSocket.getOutputStream());
-			DataObject input = (DataObject) ois.readObject();
+			TransferObject input = (TransferObject) ois.readObject();
 			peer.performOperation(input);
 			oos.writeObject(input);
 			oos.flush();

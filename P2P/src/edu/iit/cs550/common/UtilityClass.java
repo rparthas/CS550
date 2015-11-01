@@ -11,7 +11,6 @@ import java.util.Enumeration;
 import java.util.Properties;
 import java.util.regex.Pattern;
 
-import edu.iit.cs550.peer.DataObject;
 import edu.iit.cs550.peer.PeerObject;
 
 /**
@@ -138,17 +137,57 @@ public class UtilityClass {
 	 * @param clientSocket
 	 * @return
 	 */
-	public static DataObject connectToPeer(DataObject object, Socket clientSocket) {
+	public static TransferObject connectToPeer(TransferObject object, Socket clientSocket) {
 		try (ObjectOutputStream oos = new ObjectOutputStream(clientSocket.getOutputStream());
 				ObjectInputStream ois = new ObjectInputStream(clientSocket.getInputStream());) {
 			oos.writeObject(object);
 			oos.flush();
-			object = (DataObject) ois.readObject();
+			object = (TransferObject) ois.readObject();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 
 		return object;
 	}
+	/**
+	 * Writes an output object back to the requestor
+	 * 
+	 * @param object
+	 * @throws Exception
+	 */
+	public static void writeObject(Object object, Socket socket)
+			throws Exception {
+		try {
+			ObjectOutputStream oos = new ObjectOutputStream(
+					socket.getOutputStream());
+			oos.writeObject(object);
+			oos.flush();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+	/**
+	 * Reads the input stream and converts it into transfer object
+	 * 
+	 * @param socket
+	 * @return
+	 * @throws Exception
+	 */
+	public static TransferObject readObject(Socket socket) throws Exception {
+		TransferObject to = null;
+		try {
+			ObjectInputStream ois = new ObjectInputStream(
+					socket.getInputStream());
+			Object obj = ois.readObject();
+			if (obj instanceof TransferObject) {
+				to = (TransferObject) obj;
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return to;
+	}
+
 
 }
