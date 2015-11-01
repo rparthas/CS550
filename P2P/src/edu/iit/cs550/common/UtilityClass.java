@@ -23,8 +23,6 @@ public class UtilityClass {
 
 	public static Properties prop = new Properties();
 
-	
-
 	/**
 	 * loads the property file
 	 */
@@ -128,38 +126,15 @@ public class UtilityClass {
 		return getIntValue(Constants.PEERS);
 	}
 
-
-	/**
-	 * Overloaded version of connecting to peer and writing the result. Used by
-	 * Client
-	 * 
-	 * @param object
-	 * @param clientSocket
-	 * @return
-	 */
-	public static TransferObject connectToPeer(TransferObject object, Socket clientSocket) {
-		try (ObjectOutputStream oos = new ObjectOutputStream(clientSocket.getOutputStream());
-				ObjectInputStream ois = new ObjectInputStream(clientSocket.getInputStream());) {
-			oos.writeObject(object);
-			oos.flush();
-			object = (TransferObject) ois.readObject();
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-
-		return object;
-	}
 	/**
 	 * Writes an output object back to the requestor
 	 * 
 	 * @param object
 	 * @throws Exception
 	 */
-	public static void writeObject(Object object, Socket socket)
-			throws Exception {
+	public static void writeObject(Object object, Socket socket) throws Exception {
 		try {
-			ObjectOutputStream oos = new ObjectOutputStream(
-					socket.getOutputStream());
+			ObjectOutputStream oos = new ObjectOutputStream(socket.getOutputStream());
 			oos.writeObject(object);
 			oos.flush();
 		} catch (Exception e) {
@@ -177,8 +152,7 @@ public class UtilityClass {
 	public static TransferObject readObject(Socket socket) throws Exception {
 		TransferObject to = null;
 		try {
-			ObjectInputStream ois = new ObjectInputStream(
-					socket.getInputStream());
+			ObjectInputStream ois = new ObjectInputStream(socket.getInputStream());
 			Object obj = ois.readObject();
 			if (obj instanceof TransferObject) {
 				to = (TransferObject) obj;
@@ -188,6 +162,5 @@ public class UtilityClass {
 		}
 		return to;
 	}
-
 
 }

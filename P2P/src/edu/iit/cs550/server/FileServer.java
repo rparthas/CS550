@@ -4,7 +4,6 @@ import java.io.BufferedInputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
-import java.io.ObjectOutputStream;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -60,7 +59,7 @@ public class FileServer implements Callable<Object> {
 	 */
 	public void register() throws Exception {
 		try (Socket clientSocket = openSocket();) {
-			ObjectOutputStream oos = new ObjectOutputStream(clientSocket.getOutputStream());
+
 			File folder = new File(directory);
 			File[] listOfFiles = folder.listFiles();
 			List<String> files = new ArrayList<String>();
@@ -77,8 +76,8 @@ public class FileServer implements Callable<Object> {
 					}
 				}
 			}
-			oos.writeObject(to);
-			oos.flush();
+			UtilityClass.writeObject(to, clientSocket);
+			UtilityClass.readObject(clientSocket);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -131,7 +130,6 @@ public class FileServer implements Callable<Object> {
 			if (peerId == 0) {
 				peerId = 1;
 			}
-			System.out.println("peer" + peerId);
 			socket = socketPool.getSocket("peer" + peerId);
 		}
 		return socket;

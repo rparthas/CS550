@@ -144,7 +144,8 @@ public class Peer implements Runnable {
 	 */
 	private TransferObject connectToPeer(TransferObject object, PeerObject peerObject) {
 		try (Socket clientSocket = socketPool.getSocket(peerObject.getPeerId());) {
-			UtilityClass.connectToPeer(object, clientSocket);
+			UtilityClass.writeObject(object, clientSocket);
+			object = UtilityClass.readObject(clientSocket);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
