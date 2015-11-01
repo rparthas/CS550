@@ -71,7 +71,7 @@ public class Peer implements Runnable {
 					break;
 				}
 			} else {
-				connectToPeer(input, peerObject);
+				connectToPeer(input, obj);
 			}
 		} catch (Exception e) {
 			e.printStackTrace();

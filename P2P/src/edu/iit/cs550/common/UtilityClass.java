@@ -1,6 +1,5 @@
 package edu.iit.cs550.common;
 
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
@@ -33,7 +32,7 @@ public class UtilityClass {
 	static {
 		InputStream input = null;
 		try {
-			input = new FileInputStream(Constants.PROPERTYFILE);
+			input = ClassLoader.getSystemResourceAsStream(Constants.PROPERTYFILE);
 			prop.load(input);
 		} catch (Exception ex) {
 			ex.printStackTrace();
@@ -91,7 +90,7 @@ public class UtilityClass {
 			Enumeration<NetworkInterface> ifaces = NetworkInterface.getNetworkInterfaces();
 			loop: while (ifaces.hasMoreElements()) {
 				NetworkInterface iface = ifaces.nextElement();
-				if (Pattern.matches("wlan[0-9]", iface.getDisplayName())) {
+				if (Pattern.matches("wlp2s[0-9]", iface.getDisplayName())) {
 					InetAddress ia = null;
 					for (Enumeration<InetAddress> ips = iface.getInetAddresses(); ips.hasMoreElements();) {
 						ia = (InetAddress) ips.nextElement();

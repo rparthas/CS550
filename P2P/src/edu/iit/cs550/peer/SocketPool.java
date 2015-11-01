@@ -3,8 +3,9 @@ package edu.iit.cs550.peer;
 import java.io.IOException;
 import java.net.Socket;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import edu.iit.cs550.common.Constants;
 import edu.iit.cs550.common.UtilityClass;
@@ -17,7 +18,7 @@ import edu.iit.cs550.common.UtilityClass;
  */
 public class SocketPool implements Runnable {
 
-	List<SocketHolder> sockets = Collections.synchronizedList(new ArrayList<>());
+	Map<String, List<Socket>> socketHolder = new ConcurrentHashMap<>();
 
 	PeerObject peerObject = null;
 
@@ -32,6 +33,11 @@ public class SocketPool implements Runnable {
 	public void run() {
 		for (int i = 1; i <= UtilityClass.getNoOfPeers(); i++) {
 			String peerId = Constants.PEER + i;
+			List<Socket> sockets = socketHolder.get(peerId);
+			if (sockets == null) {
+				sockets = new ArrayList<>();
+				socketHolder.put(peerId, sockets);
+			}
 			if (sockets.size() < UtilityClass.getIntValue(Constants.PEERPOOL)) {
 				try {
 					PeerObject obj = UtilityClass.getPeer(peerId);
@@ -39,8 +45,7 @@ public class SocketPool implements Runnable {
 						continue;
 					}
 					Socket socket = makeSocket(obj);
-					SocketHolder socketHolder = new SocketHolder(peerId, socket);
-					sockets.add(socketHolder);
+					sockets.add(socket);
 				} catch (Exception e) {
 					continue;
 				}
@@ -60,8 +65,7 @@ public class SocketPool implements Runnable {
 		try {
 			socket = new Socket(peerObject.getIpAddress(), peerObject.getPort());
 		} catch (IOException e) {
-			System.out.println("PeerId:" + peerObject.getPeerId());
-			e.printStackTrace();
+
 		}
 		return socket;
 	}
@@ -72,18 +76,13 @@ public class SocketPool implements Runnable {
 	 * @param peerId
 	 * @return
 	 */
-	public Socket getSocket(String peerId) {
+	public synchronized Socket getSocket(String peerId) {
 		Socket socket = null;
-		int index = 0;
-		for (SocketHolder socketHolder : sockets) {
-			if (socketHolder.getPeerId().equals(peerId)) {
-				socket = sockets.get(index).getSocket();
-				sockets.remove(index);
-			}
-			index++;
-
+		List<Socket> sockets = socketHolder.get(peerId);
+		if (sockets != null && sockets.size() > 0) {
+			socket = sockets.get(0);
+			sockets.remove(0);
 		}
-
 		if (socket == null) {
 			PeerObject obj = UtilityClass.getPeer(peerId);
 			socket = makeSocket(obj);

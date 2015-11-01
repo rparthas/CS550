@@ -36,8 +36,8 @@ public class Evaluator implements Callable<Evaluator> {
 			Peer peer = new Peer(i);
 			peer.execute();
 		}
-		Thread.sleep(5000);
-		int[] opnCount = { 10 ^ 3, 10 ^ 4, 10 ^ 5 };
+		Thread.sleep(10000);
+		int[] opnCount = {  8*10 ^ 6 };
 		for (int ops : opnCount) {
 			performOperation(peerCount, ops, "PUT");
 			performOperation(peerCount, ops, "GET");
