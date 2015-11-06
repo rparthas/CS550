@@ -9,20 +9,17 @@ import edu.iit.cs550.common.UtilityClass;
 
 public class StartFileServer implements Runnable {
 
-	FileServer fileServer = null;
+	public FileServer fileServer = null;
 
 	public static void main(String[] args) {
 
 		int port = UtilityClass.getIntValue(Constants.FILESERVERPORT);
-		String indexServerAddress = UtilityClass.getValue(Constants.PEER);
-		String serverAddress = indexServerAddress.split(":")[0];
-		int peerPort = Integer.parseInt(indexServerAddress.split(":")[1]);
 		String directory = UtilityClass.getValue(Constants.DIRECTORY);
 		int threads = UtilityClass.getIntValue(Constants.SERVERTHREADS);
 		FileServer fileServer = null;
 		StartFileServer startFileServer = new StartFileServer();
 		try (Scanner scanner = new Scanner(System.in);) {
-			fileServer = new FileServer(port, directory, peerPort, serverAddress, threads);
+			fileServer = new FileServer(port, directory, threads);
 			fileServer.register();
 			startFileServer.fileServer = fileServer;
 			new Thread(startFileServer).start();

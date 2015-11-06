@@ -68,7 +68,7 @@ public class Peer implements Runnable {
 				connectToPeer(to, obj);
 			}
 		} catch (Exception e) {
-			e.printStackTrace();
+			//e.printStackTrace();
 		}
 
 	}
@@ -123,7 +123,7 @@ public class Peer implements Runnable {
 				executorService.submit(pThread);
 			}
 		} catch (Exception e) {
-			e.printStackTrace();
+			//e.printStackTrace();
 		}
 	}
 
@@ -147,7 +147,7 @@ public class Peer implements Runnable {
 			UtilityClass.writeObject(object, clientSocket);
 			object = UtilityClass.readObject(clientSocket);
 		} catch (Exception e) {
-			e.printStackTrace();
+			//e.printStackTrace();
 		}
 		return object;
 	}
@@ -196,7 +196,7 @@ class PeerThread implements Runnable {
 			oos.writeObject(input);
 			oos.flush();
 		} catch (Exception e) {
-			e.printStackTrace();
+			//e.printStackTrace();
 		}
 	}
 

@@ -1,5 +1,6 @@
 package edu.iit.cs550.common;
 
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
@@ -9,6 +10,7 @@ import java.net.NetworkInterface;
 import java.net.Socket;
 import java.util.Enumeration;
 import java.util.Properties;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import edu.iit.cs550.peer.PeerObject;
@@ -29,7 +31,7 @@ public class UtilityClass {
 	static {
 		InputStream input = null;
 		try {
-			input = ClassLoader.getSystemResourceAsStream(Constants.PROPERTYFILE);
+			input = new FileInputStream(Constants.PROPERTYFILE);
 			prop.load(input);
 		} catch (Exception ex) {
 			ex.printStackTrace();
@@ -87,7 +89,9 @@ public class UtilityClass {
 			Enumeration<NetworkInterface> ifaces = NetworkInterface.getNetworkInterfaces();
 			loop: while (ifaces.hasMoreElements()) {
 				NetworkInterface iface = ifaces.nextElement();
-				if (Pattern.matches("wlp2s[0-9]", iface.getDisplayName())) {
+				Pattern pattern = Pattern.compile("wl.*[0-9]");
+				Matcher matcher = pattern.matcher(iface.getDisplayName());
+				if (matcher.find()) {
 					InetAddress ia = null;
 					for (Enumeration<InetAddress> ips = iface.getInetAddresses(); ips.hasMoreElements();) {
 						ia = (InetAddress) ips.nextElement();

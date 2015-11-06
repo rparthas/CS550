@@ -32,21 +32,15 @@ public class FileServer implements Callable<Object> {
 
 	String directory = null;
 
-	String serverAddress = null;
-
-	int serverPort = 0;
-
 	int threadCount = 0;
 
 	private Socket socket = null;// Create a socket for the server
 
 	SocketPool socketPool = new SocketPool(null);
 
-	public FileServer(int port, String directory, int serverPort, String ipAddress, int threadCount) throws Exception {
+	public FileServer(int port, String directory, int threadCount) throws Exception {
 		this.port = port;
 		this.directory = directory;
-		this.serverPort = serverPort;
-		this.serverAddress = ipAddress;
 		this.threadCount = threadCount;
 	}
 
@@ -58,26 +52,29 @@ public class FileServer implements Callable<Object> {
 	 * @throws Exception
 	 */
 	public void register() throws Exception {
-		try (Socket clientSocket = openSocket();) {
+		try  {
 
 			File folder = new File(directory);
 			File[] listOfFiles = folder.listFiles();
-			List<String> files = new ArrayList<String>();
+
 			TransferObject to = new TransferObject();
 			to.setDirectory(directory);
 			to.setIpAddress(UtilityClass.getMyIP());
 			to.setPort(port);
 			to.setRequestFile(false);
-			to.setFiles(files);
 			if (listOfFiles != null) {
 				for (File file : listOfFiles) {
 					if (file.isFile()) {
+						List<String> files = new ArrayList<String>();
+						to.setFiles(files);
 						files.add(file.getName());
+						Socket clientSocket = openSocket();
+						UtilityClass.writeObject(to, clientSocket);
+						UtilityClass.readObject(clientSocket);
 					}
 				}
 			}
-			UtilityClass.writeObject(to, clientSocket);
-			UtilityClass.readObject(clientSocket);
+
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -201,14 +198,14 @@ public class FileServer implements Callable<Object> {
 					String path = directory + "/" + fileName;
 					File file = new File(path);
 					if (file.exists()) {
-						System.out.println("file already exists");
+						//System.out.println("file already exists");
 					} else {
 						Files.copy(din, Paths.get(path));
 					}
 				}
 			}
 		} catch (Exception e) {
-			e.printStackTrace();
+			//e.printStackTrace();
 		}
 	}
 
