@@ -65,9 +65,7 @@ public class FileServer implements Callable<Object> {
 			if (listOfFiles != null) {
 				for (File file : listOfFiles) {
 					if (file.isFile()) {
-						List<String> files = new ArrayList<String>();
-						to.setFiles(files);
-						files.add(file.getName());
+						to.setFileName(file.getName());
 						Socket clientSocket = openSocket();
 						UtilityClass.writeObject(to, clientSocket);
 						UtilityClass.readObject(clientSocket);
@@ -143,7 +141,7 @@ public class FileServer implements Callable<Object> {
 			TransferObject to = UtilityClass.readObject(socket);
 			if (to != null) {
 				if (to.isRequestFile()) {
-					File file = new File(directory + "/" + to.getRequestFileName());
+					File file = new File(directory + "/" + to.getFileName());
 					dos.writeUTF(file.getName());
 					Files.copy(file.toPath(), dos);
 				}
@@ -166,7 +164,7 @@ public class FileServer implements Callable<Object> {
 		try (Socket clientSocket = openSocket();) {
 			TransferObject to = new TransferObject();
 			to.setRequestFile(true);
-			to.setRequestFileName(fileName);
+			to.setFileName(fileName);
 			UtilityClass.writeObject(to, clientSocket);
 			to = UtilityClass.readObject(clientSocket);
 			if (to != null) {
@@ -190,7 +188,7 @@ public class FileServer implements Callable<Object> {
 				fileServerObject.getPort());) {
 			TransferObject to = new TransferObject();
 			to.setRequestFile(true);
-			to.setRequestFileName(fileName);
+			to.setFileName(fileName);
 			UtilityClass.writeObject(to, clientSocket);
 			try (BufferedInputStream in = new BufferedInputStream(clientSocket.getInputStream());
 					DataInputStream din = new DataInputStream(in);) {
@@ -198,7 +196,7 @@ public class FileServer implements Callable<Object> {
 					String path = directory + "/" + fileName;
 					File file = new File(path);
 					if (file.exists()) {
-						//System.out.println("file already exists");
+						System.out.println("file already exists");
 					} else {
 						Files.copy(din, Paths.get(path));
 					}

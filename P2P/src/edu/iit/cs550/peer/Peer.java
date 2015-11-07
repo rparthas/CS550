@@ -52,14 +52,14 @@ public class Peer implements Runnable {
 	 * @param input
 	 */
 	public void performOperation(TransferObject to) {
-		String hash = to.getIpAddress() + ":" + to.getPort();
+		String hash = to.getFileName();
 		int peerNo = computeHash(hash);
 		String peer = Constants.PEER + peerNo;
 		try {
 			PeerObject obj = UtilityClass.getPeer(peer);
 			if (peerObject.equals(obj)) {
 				if (to.isRequestFile()) {
-					List<FileServerObject> peers = lookUpFile(to.getRequestFileName());
+					List<FileServerObject> peers = lookUpFile(to.getFileName());
 					to.setPeers(peers);
 				} else {
 					saveToRegistry(to);
@@ -68,7 +68,7 @@ public class Peer implements Runnable {
 				connectToPeer(to, obj);
 			}
 		} catch (Exception e) {
-			//e.printStackTrace();
+			// e.printStackTrace();
 		}
 
 	}
@@ -77,19 +77,18 @@ public class Peer implements Runnable {
 	 * This method saves the object to registry
 	 */
 	private void saveToRegistry(TransferObject to) {
-		if (to.getFiles() != null) {
-			for (String file : to.getFiles()) {
-				List<FileServerObject> peers = new ArrayList<FileServerObject>();
-				if (registry.containsKey(file)) {
-					peers = registry.get(file);
-				}
-				FileServerObject fileServerObject = new FileServerObject();
-				fileServerObject.setDirectory(to.getDirectory());
-				fileServerObject.setIpAddress(to.getIpAddress());
-				fileServerObject.setPort(to.getPort());
-				peers.add(fileServerObject);
-				registry.put(file, peers);
+		if (to.getFileName() != null) {
+			String file = to.getFileName();
+			List<FileServerObject> peers = new ArrayList<FileServerObject>();
+			if (registry.containsKey(file)) {
+				peers = registry.get(file);
 			}
+			FileServerObject fileServerObject = new FileServerObject();
+			fileServerObject.setDirectory(to.getDirectory());
+			fileServerObject.setIpAddress(to.getIpAddress());
+			fileServerObject.setPort(to.getPort());
+			peers.add(fileServerObject);
+			registry.put(file, peers);
 		}
 	}
 
@@ -123,7 +122,7 @@ public class Peer implements Runnable {
 				executorService.submit(pThread);
 			}
 		} catch (Exception e) {
-			//e.printStackTrace();
+			// e.printStackTrace();
 		}
 	}
 
@@ -147,7 +146,7 @@ public class Peer implements Runnable {
 			UtilityClass.writeObject(object, clientSocket);
 			object = UtilityClass.readObject(clientSocket);
 		} catch (Exception e) {
-			//e.printStackTrace();
+			// e.printStackTrace();
 		}
 		return object;
 	}
@@ -196,7 +195,7 @@ class PeerThread implements Runnable {
 			oos.writeObject(input);
 			oos.flush();
 		} catch (Exception e) {
-			//e.printStackTrace();
+			// e.printStackTrace();
 		}
 	}
 

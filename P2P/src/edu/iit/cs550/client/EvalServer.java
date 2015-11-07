@@ -14,31 +14,39 @@ public class EvalServer {
 	public int port = 0;
 	public String directory = null;
 	public String lookupFile = null;
-	int ops =0;
+	int ops = 0;
+	StopWatch sw = new StopWatch();
+	StartFileServer startFileServer = new StartFileServer();
 
 	public void run() throws Exception {
-		StopWatch sw = new StopWatch();
+
 		int threads = UtilityClass.getIntValue(Constants.SERVERTHREADS);
-		StartFileServer startFileServer = new StartFileServer();
+
 		startFileServer.fileServer = new FileServer(port, directory, threads);
 		new Thread(startFileServer).start();
 		Thread.sleep(5000);
 		sw.start();
 		startFileServer.fileServer.register();
 		System.out.println("Register Time:" + sw.Stop());
+
+	}
+
+	public void download() throws Exception {
+		sw.start();
+		for (int i = 1; i <= ops; i++) {
+			List<FileServerObject> servers = startFileServer.fileServer.lookUpFile(lookupFile + i + ".bin");
+			if (servers != null && servers.size() > 0) {
+				startFileServer.fileServer.downloadFile(servers.get(0), lookupFile + i + ".bin");
+			}
+		}
+		System.out.println("Download Time:" + sw.Stop());
+	}
+
+	public void lookUp() throws Exception {
 		sw.start();
 		for (int i = 1; i <= ops; i++) {
 			startFileServer.fileServer.lookUpFile(lookupFile + i + ".bin");
 		}
 		System.out.println("Lookup Time:" + sw.Stop());
-		sw.start();
-		for (int i = 1; i <= ops; i++) {
-			List<FileServerObject> servers = startFileServer.fileServer.lookUpFile(lookupFile + i + ".bin");
-			if (servers!=null && servers.size() > 0) {
-				startFileServer.fileServer.downloadFile(servers.get(0), lookupFile + i + ".bin");
-			}
-		}
-		System.out.println("Download Time:" + sw.Stop());
-
 	}
 }

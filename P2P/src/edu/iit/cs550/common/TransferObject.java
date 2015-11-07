@@ -9,13 +9,11 @@ public class TransferObject implements Serializable {
 
 	private String ipAddress;
 
-	private List<String> files;
-
 	private String directory;
 
 	private int port;
 
-	private String requestFileName;
+	private String fileName;
 
 	private boolean requestFile;
 
@@ -31,10 +29,8 @@ public class TransferObject implements Serializable {
 
 	@Override
 	public String toString() {
-		return "TransferObject [ipAddress=" + ipAddress + ", files=" + files
-				+ ", directory=" + directory + ", port=" + port
-				+ ", requestFileName=" + requestFileName + ", requestFile="
-				+ requestFile + ", peers=" + peers + "]";
+		return "TransferObject [ipAddress=" + ipAddress + ", directory=" + directory + ", port=" + port
+				+ ", requestFileName=" + fileName + ", requestFile=" + requestFile + ", peers=" + peers + "]";
 	}
 
 	public String getIpAddress() {
@@ -45,14 +41,6 @@ public class TransferObject implements Serializable {
 		this.ipAddress = ipAddress;
 	}
 
-	public List<String> getFiles() {
-		return files;
-	}
-
-	public void setFiles(List<String> files) {
-		this.files = files;
-	}
-
 	public int getPort() {
 		return port;
 	}
@@ -61,12 +49,12 @@ public class TransferObject implements Serializable {
 		this.port = port;
 	}
 
-	public String getRequestFileName() {
-		return requestFileName;
+	public String getFileName() {
+		return fileName;
 	}
 
-	public void setRequestFileName(String requestFileName) {
-		this.requestFileName = requestFileName;
+	public void setFileName(String fileName) {
+		this.fileName = fileName;
 	}
 
 	public boolean isRequestFile() {

@@ -18,6 +18,7 @@ import edu.iit.cs550.peer.Peer;
 public class Evaluator implements Callable<Evaluator> {
 
 	EvalServer evalServer = null;
+	static String operation = "REG";
 
 	public static void main(String[] args) throws Exception {
 
@@ -43,13 +44,23 @@ public class Evaluator implements Callable<Evaluator> {
 			tasks.add(evaluator);
 		}
 		es.invokeAll(tasks);
+		operation = "LKP";
+		es.invokeAll(tasks);
+		operation = "DL";
+		es.invokeAll(tasks);
 		System.exit(0);
 
 	}
 
 	@Override
 	public Evaluator call() throws Exception {
-		evalServer.run();
+		if ("REG".equals(operation)) {
+			evalServer.run();
+		} else if ("LKP".equals(operation)) {
+			evalServer.lookUp();
+		} else {
+			evalServer.download();
+		}
 		return this;
 	}
 }
