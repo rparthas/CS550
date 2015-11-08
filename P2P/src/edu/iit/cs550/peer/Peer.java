@@ -51,7 +51,7 @@ public class Peer implements Runnable {
 	 * 
 	 * @param input
 	 */
-	public void performOperation(TransferObject to) {
+	public TransferObject performOperation(TransferObject to) {
 		String hash = to.getFileName();
 		int peerNo = computeHash(hash);
 		String peer = Constants.PEER + peerNo;
@@ -65,11 +65,12 @@ public class Peer implements Runnable {
 					saveToRegistry(to);
 				}
 			} else {
-				connectToPeer(to, obj);
+				to = connectToPeer(to, obj);
 			}
 		} catch (Exception e) {
 			// e.printStackTrace();
 		}
+		return to;
 
 	}
 
@@ -191,7 +192,7 @@ class PeerThread implements Runnable {
 			ObjectInputStream ois = new ObjectInputStream(peerSocket.getInputStream());
 			ObjectOutputStream oos = new ObjectOutputStream(peerSocket.getOutputStream());
 			TransferObject input = (TransferObject) ois.readObject();
-			peer.performOperation(input);
+			input=peer.performOperation(input);
 			oos.writeObject(input);
 			oos.flush();
 		} catch (Exception e) {

@@ -183,7 +183,8 @@ public class FileServer implements Callable<Object> {
 	 * @param fileServerObject
 	 * @param fileName
 	 */
-	public void downloadFile(FileServerObject fileServerObject, String fileName) {
+	public boolean downloadFile(FileServerObject fileServerObject, String fileName) {
+		boolean success = true;
 		try (Socket clientSocket = new Socket(InetAddress.getByName(fileServerObject.getIpAddress()),
 				fileServerObject.getPort());) {
 			TransferObject to = new TransferObject();
@@ -203,8 +204,9 @@ public class FileServer implements Callable<Object> {
 				}
 			}
 		} catch (Exception e) {
-			//e.printStackTrace();
+			success=false;
 		}
+		return success;
 	}
 
 }

@@ -88,8 +88,11 @@ public class StartFileServer implements Runnable {
 				if (peerId <= 0 || peerId > servers.size()) {
 					continue;
 				} else {
-					fileServer.downloadFile(servers.get(peerId - 1), fileName);
+					boolean download=fileServer.downloadFile(servers.get(peerId - 1), fileName);
+					if(download)
 					System.out.println("File Download successful");
+					else
+					System.out.println("Choose another peer as download failed");
 					peerLoop = false;
 				}
 

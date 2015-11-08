@@ -24,6 +24,7 @@ public class Evaluator implements Callable<Evaluator> {
 
 		ExecutorService es = Executors.newFixedThreadPool(8);
 		int ops = Integer.parseInt(args[0]);
+		int peers = Integer.parseInt(args[1]);
 
 		// code for initializing the DHT
 		int peerStartPort = 2343;
@@ -32,7 +33,7 @@ public class Evaluator implements Callable<Evaluator> {
 			peer.execute();
 		}
 		List<Evaluator> tasks = new ArrayList<Evaluator>();
-		for (int i = 1; i <= UtilityClass.getNoOfPeers(); i++) {
+		for (int i = 1; i <= peers; i++) {
 			EvalServer evalServer = new EvalServer();
 			evalServer.ops = ops;
 			evalServer.port = 2350 + i;
